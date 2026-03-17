@@ -1,10 +1,54 @@
-const fruits = [
-    {id: 1, name: 'Banana', price: 1.99},
-    {id: 2, name: 'Maçã', price: 2.39},
-    {id: 3, name: 'Abacaxi', price: 2.79},
-    {id: 4, name: 'Abacate', price: 4.99},
-    {id: 5, name: 'Kiwi', price: 5.99},
+const movies = [
+  {
+    id: 1,
+    name: 'Até o Último Homem',
+    stars: 4.5,
+    categoryId: 3,
+    director: 'Mel Gibson',
+    actors: ['Andrew Garfield', 'Sam Worthington', 'Luke Bracey'],
+    releaseYear: 2016,
+    duration: '139 min',
+  },
+  {
+    id: 2,
+    name: 'Onde Está Segunda?',
+    stars: 4.0,
+    categoryId: 4,
+    director: 'F. Gary Gray',
+    actors: ['Ice Cube', 'Chris Tucker', 'John Witherspoon'],
+    releaseYear: 1995,
+    duration: '91 min',
+  },
+  {
+    id: 3,
+    name: 'O Menino do Pijama Listrado',
+    stars: 4.5,
+    categoryId: 3,
+    director: 'Mark Herman',
+    actors: ['Asa Butterfield', 'Jack Scanlon', 'David Thewlis'],
+    releaseYear: 2008,
+    duration: '94 min',
+  },
+  {
+    id: 4,
+    name: 'Carros',
+    stars: 5,
+    categoryId: 2,
+    director: 'John Lasseter',
+    actors: ['Owen Wilson', 'Paul Newman', 'Bonnie Hunt'],
+    releaseYear: 2006,
+    duration: '117 min',
+  },
+  {
+    id: 5,
+    name: 'Sonic 3',
+    stars: 4.5,
+    categoryId: 1,
+    director: 'Jeff Fowler',
+    actors: ['Ben Schwartz', 'Jim Carrey', 'Keanu Reeves'],
+    releaseYear: 2024,
+    duration: '110 min',
+  },
 ]
 
-export default fruits
-
+module.exports = movies
