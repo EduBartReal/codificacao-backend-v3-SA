@@ -1,15 +1,15 @@
-const express = require('express')
-const app = express()
-const port = 3000
+const express = require("express");
+const app = express();
+const netflixRoutes = require("./src/routes/netflixRoutes");
  
-const netflixRoutes = require('./routes/netflixRoutes')
+app.use(express.json());
  
-app.get('/', (req, res) => {
-  res.send('There are no routes here.')
-})
+// prefixo /api para todas as rotas
+app.use("/api", netflixRoutes);
  
-app.use('/netflix', netflixRoutes)
+// health check
+app.get("/", (req, res) => res.json({ status: "ok", message: "Netflix API running 🎬" }));
  
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-}) 
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+ 
