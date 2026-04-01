@@ -1,15 +1,17 @@
-const express = require("express");
+import express from 'express';
+import route from './routes/netflixRoutes.js';
+
 const app = express();
-const netflixRoutes = require("./src/routes/netflixRoutes");
- 
+const port = 3000;
+
 app.use(express.json());
- 
-// prefixo /api para todas as rotas
-app.use("/api", netflixRoutes);
- 
-// health check
-app.get("/", (req, res) => res.json({ status: "ok", message: "Netflix API running 🎬" }));
- 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
- 
+
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', message: 'Netflix API running 🎬' });
+});
+
+app.use('/api', route);
+
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});

@@ -1,45 +1,39 @@
-const express = require("express");
-const router = express.Router();
-const {
-  getAllMovies,
-  getMovieById,
-  getAllPeople,
-  getPersonById,
-  getMoviesByPerson,
-} = require("../services/netflixServices");
+import express from 'express';
+const route = express.Router();
+import { netflixServices } from '../services/netflixServices.js';
 
-// ─── movies
+// ─── Movies ───────────────────────────────────────────
 
-router.get("/movies", (req, res) => {
+route.get('/movies', (req, res) => {
   const { genre, year, directorId } = req.query;
-  const result = getAllMovies({ genre, year, directorId });
+  const result = netflixServices.getAllMovies({ genre, year, directorId });
   res.json({ total: result.length, data: result });
 });
 
-router.get("/movies/:id", (req, res) => {
-  const movie = getMovieById(req.params.id);
-  if (!movie) return res.status(404).json({ message: "Movie not found" });
+route.get('/movies/:id', (req, res) => {
+  const movie = netflixServices.getMovieById(req.params.id);
+  if (movie.error) return res.status(404).json({ message: movie.error });
   res.json(movie);
 });
 
-// ─── people 
+// ─── People ───────────────────────────────────────────
 
-router.get("/people", (req, res) => {
+route.get('/people', (req, res) => {
   const { role, nationality } = req.query;
-  const result = getAllPeople({ role, nationality });
+  const result = netflixServices.getAllPeople({ role, nationality });
   res.json({ total: result.length, data: result });
 });
 
-router.get("/people/:id", (req, res) => {
-  const person = getPersonById(req.params.id);
-  if (!person) return res.status(404).json({ message: "Person not found" });
+route.get('/people/:id', (req, res) => {
+  const person = netflixServices.getPersonById(req.params.id);
+  if (person.error) return res.status(404).json({ message: person.error });
   res.json(person);
 });
 
-router.get("/people/:id/movies", (req, res) => {
-  const result = getMoviesByPerson(req.params.id);
-  if (!result) return res.status(404).json({ message: "Person not found" });
+route.get('/people/:id/movies', (req, res) => {
+  const result = netflixServices.getMoviesByPerson(req.params.id);
+  if (result.error) return res.status(404).json({ message: result.error });
   res.json(result);
 });
 
-module.exports = router;
+export default route;
