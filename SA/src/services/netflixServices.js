@@ -1,5 +1,4 @@
-import movies from '../data/movies.js';
-import people from '../data/people.js';
+import { movies, people } from '../data/index.js';
 
 class NetflixServices {
 

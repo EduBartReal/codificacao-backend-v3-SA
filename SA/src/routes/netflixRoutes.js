@@ -1,6 +1,7 @@
 import express from 'express';
-const route = express.Router();
 import { netflixServices } from '../services/netflixServices.js';
+
+const route = express.Router();
 
 // ─── Movies ───────────────────────────────────────────
 
