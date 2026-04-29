@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CineStream</title>
+  <link rel="stylesheet" href="netflix.css" />
+</head>
+<body>
+
+<!-- ─── HEADER ─── -->
+<header>
+  <div class="logo">Cine<span>Stream</span></div>
+  <nav>
+    <button class="active" onclick="setView('movies', this)">🎬 Filmes</button>
+    <button onclick="setView('directors', this)">🧑‍💼 Diretores</button>
+    <button onclick="setView('actors', this)">🎭 Atores</button>
+  </nav>
+</header>
+
+<!-- ─── FILTERS ─── -->
+<div class="filters-section">
+  <div class="filters-title">FILTROS</div>
+  <div class="filters-row">
+    <select id="genreFilter" onchange="applyFilters()">
+      <option value="">Todos os gêneros</option>
+      <option>Action</option>
+      <option>Drama</option>
+      <option>Crime</option>
+      <option>Thriller</option>
+      <option>Sci-Fi</option>
+      <option>Biography</option>
+      <option>Comedy</option>
+      <option>Mystery</option>
+      <option>History</option>
+      <option>Adventure</option>
+      <option>War</option>
+      <option>Western</option>
+      <option>Romance</option>
+      <option>Documentary</option>
+    </select>
+    <input type="text" id="yearFilter" placeholder="Ano (ex: 2010)" maxlength="4" oninput="applyFilters()" />
+    <button class="btn btn-ghost" onclick="clearFilters()">Limpar</button>
+  </div>
+</div>
+
+<!-- ─── PEOPLE ─── -->
+<div class="people-section" id="peopleSection" style="display:none">
+  <div class="section-header">
+    <span class="section-title" id="peopleSectionTitle">DIRETORES</span>
+    <span class="section-count" id="peopleCount">0</span>
+  </div>
+  <div class="people-grid" id="peopleGrid"></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ─── MOVIES ─── -->
+<div class="movies-section">
+  <div class="results-bar">
+    <div class="section-header" style="margin-bottom:0">
+      <span class="section-title">FILMES</span>
+      <span class="section-count" id="moviesCount">0</span>
+    </div>
+    <span class="results-info" id="filterInfo"></span>
+  </div>
+  <div id="moviesContainer">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <p>Carregando filmes...</p>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MODAL ─── -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-hero" id="modalHero">
+      🎬
+      <button class="modal-close" onclick="closeModalBtn()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-meta" id="modalMeta"></div>
+      <p class="modal-synopsis" id="modalSynopsis"></p>
+      <div class="modal-section-title">Diretor</div>
+      <div class="modal-people" id="modalDirector"></div>
+      <div class="modal-section-title">Elenco</div>
+      <div class="modal-people" id="modalActors"></div>
+      <div class="modal-section-title">Gêneros</div>
+      <div class="modal-people" id="modalGenres"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:3000/api';
+  let allMovies = [];
+  let allPeople = [];
+  let selectedPersonId = null;
+  let currentView = 'movies';
+
+  async function init() {
+    await Promise.all([loadMovies(), loadPeople()]);
+  }
+
+  async function loadMovies(params = '') {
+    try {
+      const res = await fetch(`${API}/movies${params}`);
+      const json = await res.json();
+      allMovies = json.data || [];
+      renderMovies(allMovies);
+    } catch (e) {
+      document.getElementById('moviesContainer').innerHTML = `
+        <div class="error-msg">
+          <div class="empty-icon">⚠️</div>
+          <p>Não foi possível conectar à API.</p>
+          <p style="font-size:0.8rem;margin-top:0.5rem">Certifique-se que o servidor está rodando em <strong>localhost:3000</strong></p>
+        </div>`;
+    }
+  }
+
+  async function loadPeople() {
+    try {
+      const res = await fetch(`${API}/people`);
+      const json = await res.json();
+      allPeople = json.data || [];
+    } catch(e) {}
+  }
+
+  function setView(view, btn) {
+    currentView = view;
+    selectedPersonId = null;
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const peopleSection = document.getElementById('peopleSection');
+    const filterSection = document.querySelector('.filters-section');
+
+    if (view === 'movies') {
+      peopleSection.style.display = 'none';
+      filterSection.style.display = 'block';
+      applyFilters();
+    } else {
+      peopleSection.style.display = 'block';
+      filterSection.style.display = 'none';
+      const role = view === 'directors' ? 'director' : 'actor';
+      document.getElementById('peopleSectionTitle').textContent = view === 'directors' ? 'DIRETORES' : 'ATORES';
+      renderPeople(role);
+      loadMovies();
+    }
+  }
+
+  function renderPeople(role) {
+    const filtered = allPeople.filter(p => p.roles.includes(role));
+    document.getElementById('peopleCount').textContent = filtered.length;
+    const grid = document.getElementById('peopleGrid');
+    grid.innerHTML = filtered.map(p => `
+      <div class="person-chip ${selectedPersonId === p.id ? 'selected' : ''}"
+           id="chip-${p.id}" onclick="selectPerson('${p.id}')">
+        <div class="person-avatar">${p.name.split(' ').map(n => n[0]).slice(0,2).join('')}</div>
+        ${p.name}
+        <span class="person-role">${p.nationality}</span>
+      </div>
+    `).join('');
+  }
+
+  async function selectPerson(id) {
+    if (selectedPersonId === id) {
+      selectedPersonId = null;
+      document.querySelectorAll('.person-chip').forEach(c => c.classList.remove('selected'));
+      document.getElementById('filterInfo').textContent = '';
+      loadMovies();
+      return;
+    }
+
+    selectedPersonId = id;
+    document.querySelectorAll('.person-chip').forEach(c => c.classList.remove('selected'));
+    document.getElementById(`chip-${id}`)?.classList.add('selected');
+
+    try {
+      const res = await fetch(`${API}/people/${id}/movies`);
+      const data = await res.json();
+      const person = data.person;
+      const movies = [...(data.directed || []), ...(data.actedIn || [])];
+      const unique = movies.filter((m, i, arr) => arr.findIndex(x => x.id === m.id) === i);
+      document.getElementById('filterInfo').textContent = `Filtrando por: ${person.name}`;
+      renderMovies(unique);
+    } catch(e) {}
+  }
+
+  function applyFilters() {
+    if (selectedPersonId) return;
+    const genre = document.getElementById('genreFilter')?.value || '';
+    const year = document.getElementById('yearFilter')?.value || '';
+    const parts = [];
+    if (genre) parts.push(`genre=${genre}`);
+    if (year && year.length === 4) parts.push(`year=${year}`);
+    const params = parts.length ? '?' + parts.join('&') : '';
+    document.getElementById('filterInfo').textContent = parts.length ? 'Filtro ativo' : '';
+    loadMovies(params);
+  }
+
+  function clearFilters() {
+    document.getElementById('genreFilter').value = '';
+    document.getElementById('yearFilter').value = '';
+    selectedPersonId = null;
+    document.querySelectorAll('.person-chip').forEach(c => c.classList.remove('selected'));
+    document.getElementById('filterInfo').textContent = '';
+    loadMovies();
+  }
+
+  function renderMovies(movies) {
+    document.getElementById('moviesCount').textContent = movies.length;
+    const container = document.getElementById('moviesContainer');
+
+    if (!movies.length) {
+      container.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">🎬</div>
+          <p>Nenhum filme encontrado com esses filtros.</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = `<div class="movies-grid">${movies.map((m, i) => `
+      <div class="movie-card" style="animation-delay:${i * 0.04}s" onclick="openModal('${m.id}')">
+        <div class="movie-poster">
+          <span class="movie-poster-icon">🎬</span>
+          <div class="movie-year-badge">${m.year}</div>
+          <div class="movie-rating-badge">★ ${m.rating}</div>
+        </div>
+        <div class="movie-info">
+          <div class="movie-title">${m.title}</div>
+          <div class="movie-director">${m.director?.name || 'Desconhecido'}</div>
+          <div class="movie-genres">
+            ${(m.genre || []).slice(0,2).map(g => `<span class="genre-tag">${g}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+    `).join('')}</div>`;
+  }
+
+  async function openModal(id) {
+    try {
+      const res = await fetch(`${API}/movies/${id}`);
+      const m = await res.json();
+
+      document.getElementById('modalTitle').textContent = m.title;
+      document.getElementById('modalMeta').innerHTML = `
+        <span class="modal-rating">★ ${m.rating}</span>
+        <span>${m.year}</span>
+        <span>${m.durationMin} min</span>
+      `;
+      document.getElementById('modalSynopsis').textContent = m.synopsis;
+      document.getElementById('modalDirector').innerHTML = m.director
+        ? `<span class="modal-person">${m.director.name}</span>` : '-';
+      document.getElementById('modalActors').innerHTML = (m.actors || [])
+        .map(a => `<span class="modal-person">${a.name}</span>`).join('') || '-';
+      document.getElementById('modalGenres').innerHTML = (m.genre || [])
+        .map(g => `<span class="modal-person">${g}</span>`).join('');
+
+      document.getElementById('modalOverlay').classList.add('open');
+    } catch(e) {}
+  }
+
+  function closeModal(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeModalBtn();
+  }
+
+  function closeModalBtn() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModalBtn();
+  });
+
+  init();
+</script>
+</body>
+</html>

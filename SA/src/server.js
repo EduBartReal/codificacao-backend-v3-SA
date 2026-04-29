@@ -10,7 +10,7 @@ app.get('/', (req, res) => {
   res.json({ status: 'ok', message: 'Netflix API running 🎬' });
 });
 
-app.use('/api', route);
+app.use('/', route);
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
